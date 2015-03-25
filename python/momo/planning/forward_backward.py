@@ -26,6 +26,7 @@ class forward_backward( momo.opencl.Program ):
     self.idirection_buffer = cl.Buffer( self.context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf = DIRECTIONS )
 
   def __call__( self, costs, start, goal ):
+    import pylab as pl
     if ( costs < 0 ).any():
       raise runtime_error( "The cost matrix cannot have negative values" )
     mf = cl.mem_flags
@@ -82,28 +83,37 @@ class forward_backward( momo.opencl.Program ):
       wait = [e2]
       #momo.tack( "second" )
       #momo.tack( "first + second" )
-    #momo.tick( "wait" )
-    e2.wait()
-    #momo.tack( "wait" )
-    #momo.tick( "copy" )
-    cl.enqueue_copy( self.queue, forward, f1_buffer )
-    cl.enqueue_copy( self.queue, backward, b1_buffer )
-    #momo.tack( "copy" )
+      #momo.tick( "wait" )
+      e2.wait()
+      #momo.tack( "wait" )
+      #momo.tick( "copy" )
+      cl.enqueue_copy( self.queue, forward, f1_buffer )
+      cl.enqueue_copy( self.queue, backward, b1_buffer )
+      p = pl.sum( forward, 0 ) + pl.sum( backward, 0 )
+      print p.shape
+      pl.imshow( p, pl.cm.jet, None, None, "none" )
+      pl.show()
+      #momo.tack( "copy" )
     return forward, backward
 
 
 if __name__ == "__main__":
-  costs = np.ones( (8, 7, 8 ) )
+  import pylab as pl
+  costs = np.ones( (8, 10, 15 ) )
   for i in xrange( 4 ):
     costs[i] *= ( i + 1 ) * 10
     if i != 0:
       costs[8 - i] *= ( i + 1 ) * 10
 
-  start = np.array( [1, 3, 0], dtype = np.int32 )
-  end = np.array( [6, 3, 0], dtype = np.int32 )
+  start = np.array( [5, 5, 0], dtype = np.int32 )
+  end = np.array( [10, 5, 0], dtype = np.int32 )
 
   fb = forward_backward()
 
   f, b = fb( costs, start, end )
-  print b[0, 3, 1], f[6, 3, 0]
+  p = pl.sum( f, 0 ) + pl.sum( b, 0 )
+  print p.shape
+  pl.imshow( p, pl.cm.jet, None, None, "none" )
+  pl.show()
+
 

@@ -93,7 +93,11 @@ def filter_data( data, period ):
         t.predict( delta )
         tmp[k].append( [frame, timestamp, k, 1.0 * t.mean] )
     if o_id in tracks:
-      tracks[o_id].update( np.array( [x, y] ) )
+      s = np.array( [ [1000., 0.], [0., 50000.] ] )
+      m = np.random.multivariate_normal( np.array( [0.0, 0.0] ), s )
+      tracks[o_id].update( m )
+      print tracks[o_id].filter.p
+      #tracks[o_id].update( np.array( [x, y] ) )
       mean = np.array( [1., 1., 1 / delta, 1 / delta] ) * tracks[o_id].mean
       tmp[o_id][-1] = [frame, timestamp, o_id, mean]
     else:
